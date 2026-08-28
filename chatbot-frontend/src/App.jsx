@@ -77,7 +77,8 @@ export default function App() {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/chat', {
+      // Localhost ki jagah deployed Vercel Backend URL add karein
+      const response = await fetch('https://chatbot-backend-your-app.vercel.app/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -108,7 +109,7 @@ export default function App() {
       const errorMsg = {
         id: Date.now() + 1,
         sender: 'bot',
-        text: 'Server error. Kripya check karein ke backend running hai.'
+        text: 'Server error. Kindly check your backend.'
       };
       setMessages((prev) => [...prev, errorMsg]);
     } finally {
@@ -122,7 +123,7 @@ export default function App() {
       {
         id: 1,
         sender: 'bot',
-      text: 'Hello Ariba! I am your AI Assistant. How can I help you today?'
+        text: 'Hello Ariba! I am your AI Assistant. How can I help you today?'
       }
     ]);
   };
