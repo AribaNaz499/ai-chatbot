@@ -7,32 +7,30 @@ dotenv.config();
 const PORT = process.env.PORT || 5000;
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Main Request Handler (Vercel-compatible)
 const handler = async (req, res) => {
-    // Global CORS Headers
+    // CORS Headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
+    // Preflight handling
     if (req.method === 'OPTIONS') {
-        res.writeHead(204);
+        res.writeHead(200);
         res.end();
         return;
     }
 
-    if (req.url === '/' && req.method === 'GET') {
+    const url = req.url;
+
+    // Root Status
+    if (url === '/' || url === '/api') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(
-            JSON.stringify({
-                status: 'online',
-                message: '🚀 Backend Server is ready!',
-                endpoint: 'POST /api/chat'
-            })
-        );
+        res.end(JSON.stringify({ status: 'online', message: '🚀 Backend Server is ready!' }));
         return;
     }
 
-    if (req.url.startsWith('/api/chat') && req.method === 'POST') {
+    // Main Chat Route
+    if (url.includes('/api/chat') && req.method === 'POST') {
         let body = '';
 
         req.on('data', (chunk) => {
@@ -85,7 +83,7 @@ const handler = async (req, res) => {
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ reply: responseText }));
             } catch (error) {
-                console.error('SERVER ERROR DETAILS:', error.message);
+                console.error('SERVER ERROR:', error.message);
                 res.writeHead(500, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ error: error.message }));
             }
@@ -96,13 +94,9 @@ const handler = async (req, res) => {
     }
 };
 
-// Vercel Serverless Function Default Export
 module.exports = handler;
 
-// Local Development Fallback
 if (process.env.NODE_ENV !== 'production') {
     const server = http.createServer(handler);
-    server.listen(PORT, () => {
-        console.log(`Server live at http://localhost:${PORT}`);
-    });
+    server.listen(PORT, () => console.log(`Live at http://localhost:${PORT}`));
 }
