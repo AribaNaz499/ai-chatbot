@@ -8,9 +8,7 @@ const PORT = process.env.PORT || 5000;
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const server = http.createServer(async (req, res) => {
-    
-
-
+    // CORS Headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -50,14 +48,14 @@ const server = http.createServer(async (req, res) => {
                     return;
                 }
 
-                const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+                // Fixed: gemini-1.5-flash model name
+                const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
                 const formattedHistory = (history || []).map((msg) => ({
                     role: msg.sender === 'user' ? 'user' : 'model',
                     parts: [{ text: msg.text }]
                 }));
 
-                // Build request parts (text + optional file)
                 const promptParts = [];
 
                 if (file && file.base64 && file.mimeType) {
@@ -98,6 +96,11 @@ const server = http.createServer(async (req, res) => {
     }
 });
 
-server.listen(PORT, () => {
-    console.log(`Server live at http://localhost:${PORT}`);
-});
+// Vercel Serverless Function export & local dev fallback
+if (process.env.NODE_ENV !== 'production') {
+    server.listen(PORT, () => {
+        console.log(`Server live at http://localhost:${PORT}`);
+    });
+}
+
+module.exports = server;
