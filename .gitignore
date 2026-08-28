@@ -1,0 +1,6 @@
+chatbot-backend/.env
+chatbot-backend/node_modules/
+chatbot-frontend/node_modules/
+chatbot-frontend/dist/
+.env
+node_modules/
