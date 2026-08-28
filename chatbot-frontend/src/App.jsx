@@ -36,8 +36,34 @@ export default function App() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
+  // File ko Base64 string mein convert karne ke liye helper function
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   const handleSend = async () => {
     if (!input.trim() && !selectedFile) return;
+
+    let filePayload = null;
+
+    if (selectedFile) {
+      try {
+        const base64Data = await fileToBase64(selectedFile);
+        filePayload = {
+          name: selectedFile.name,
+          mimeType: selectedFile.type,
+          base64: base64Data
+        };
+      } catch (err) {
+        console.error('File reading failed:', err);
+        return;
+      }
+    }
 
     const userMsg = {
       id: Date.now(),
@@ -50,7 +76,6 @@ export default function App() {
     setMessages(newMessages);
 
     const currentInput = input;
-    const filePayload = selectedFile;
 
     setInput('');
     setSelectedFile(null);
@@ -77,8 +102,8 @@ export default function App() {
     }
 
     try {
-      // Localhost ki jagah deployed Vercel Backend URL add karein
-      const response = await fetch('https://chatbot-backend-your-app.vercel.app/api/chat', {
+      // NOTE: Is URL ko apne actual deployed Vercel backend URL se replace karein
+      const response = await fetch('https://chatbot-backend-eight-omega.vercel.app/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -93,7 +118,7 @@ export default function App() {
       if (data.reply) {
         const botMsg = { id: Date.now() + 1, sender: 'bot', text: data.reply };
         const updatedMessages = [...newMessages, botMsg];
-        
+
         setMessages(updatedMessages);
 
         setChatHistory((prev) =>
@@ -159,7 +184,7 @@ export default function App() {
           onReset={handleNewChat} 
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
         />
-        
+
         <div className="flex-1 flex flex-col w-full max-w-[94%] mx-auto px-2 sm:px-4 overflow-hidden">
           <MessageList messages={messages} loading={loading} chatEndRef={chatEndRef} />
           <SuggestionChips onSelectChip={(text) => setInput(text)} />

@@ -7,11 +7,12 @@ dotenv.config();
 const PORT = process.env.PORT || 5000;
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const server = http.createServer(async (req, res) => {
-    // CORS Headers
+// Main Request Handler (Vercel-compatible)
+const handler = async (req, res) => {
+    // Global CORS Headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
     if (req.method === 'OPTIONS') {
         res.writeHead(204);
@@ -40,7 +41,7 @@ const server = http.createServer(async (req, res) => {
 
         req.on('end', async () => {
             try {
-                const { message, history, file } = JSON.parse(body);
+                const { message, history, file } = JSON.parse(body || '{}');
 
                 if (!message && !file) {
                     res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -48,7 +49,6 @@ const server = http.createServer(async (req, res) => {
                     return;
                 }
 
-                // Fixed: gemini-1.5-flash model name
                 const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
                 const formattedHistory = (history || []).map((msg) => ({
@@ -61,7 +61,7 @@ const server = http.createServer(async (req, res) => {
                 if (file && file.base64 && file.mimeType) {
                     promptParts.push({
                         inlineData: {
-                            data: file.base64,
+                            data: file.base64.replace(/^data:.*?;base64,/, ''),
                             mimeType: file.mimeType
                         }
                     });
@@ -94,13 +94,15 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(404, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Route not found' }));
     }
-});
+};
 
-// Vercel Serverless Function export & local dev fallback
+// Vercel Serverless Function Default Export
+module.exports = handler;
+
+// Local Development Fallback
 if (process.env.NODE_ENV !== 'production') {
+    const server = http.createServer(handler);
     server.listen(PORT, () => {
         console.log(`Server live at http://localhost:${PORT}`);
     });
 }
-
-module.exports = server;
