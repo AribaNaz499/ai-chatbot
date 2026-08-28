@@ -122,7 +122,7 @@ export default function App() {
       {
         id: 1,
         sender: 'bot',
-        text: 'Hello Ariba! Main aapka AI Assistant hoon. Aaj main aapki kya help kar sakta hoon?'
+      text: 'Hello Ariba! I am your AI Assistant. How can I help you today?'
       }
     ]);
   };
