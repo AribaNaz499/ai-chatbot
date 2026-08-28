@@ -8,28 +8,29 @@ const PORT = process.env.PORT || 5000;
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const handler = async (req, res) => {
-    // CORS Headers
+    // 1. Sabhi requests par global CORS Headers set karein
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
 
-    // Preflight handling
+    // 2. Preflight (OPTIONS) Request Handling - Sab se pehle 200 return karein
     if (req.method === 'OPTIONS') {
         res.writeHead(200);
         res.end();
         return;
     }
 
-    const url = req.url;
+    // Normalizing URL path
+    const url = req.url || '';
 
-    // Root Status
+    // Root status route
     if (url === '/' || url === '/api') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ status: 'online', message: '🚀 Backend Server is ready!' }));
         return;
     }
 
-    // Main Chat Route
+    // Main Chat API route
     if (url.includes('/api/chat') && req.method === 'POST') {
         let body = '';
 
@@ -96,6 +97,7 @@ const handler = async (req, res) => {
 
 module.exports = handler;
 
+// Local Development Fallback
 if (process.env.NODE_ENV !== 'production') {
     const server = http.createServer(handler);
     server.listen(PORT, () => console.log(`Live at http://localhost:${PORT}`));
