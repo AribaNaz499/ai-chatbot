@@ -8,24 +8,25 @@ const PORT = process.env.PORT || 5000;
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const handler = async (req, res) => {
-    // 1. Sabhi requests par global CORS Headers set karein
+    // 1. Set Global CORS Headers
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+    res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
 
-    // 2. Preflight (OPTIONS) Request Handling - Sab se pehle 200 return karein
+    // 2. Handle Preflight (OPTIONS) Request
     if (req.method === 'OPTIONS') {
-        res.writeHead(200);
+        res.statusCode = 200;
         res.end();
         return;
     }
 
-    // Normalizing URL path
     const url = req.url || '';
 
     // Root status route
     if (url === '/' || url === '/api') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify({ status: 'online', message: '🚀 Backend Server is ready!' }));
         return;
     }
@@ -43,12 +44,13 @@ const handler = async (req, res) => {
                 const { message, history, file } = JSON.parse(body || '{}');
 
                 if (!message && !file) {
-                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.statusCode = 400;
+                    res.setHeader('Content-Type', 'application/json');
                     res.end(JSON.stringify({ error: 'Message or File is required' }));
                     return;
                 }
 
-                const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+                const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
                 const formattedHistory = (history || []).map((msg) => ({
                     role: msg.sender === 'user' ? 'user' : 'model',
@@ -81,16 +83,19 @@ const handler = async (req, res) => {
                     responseText = result.response.text();
                 }
 
-                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'application/json');
                 res.end(JSON.stringify({ reply: responseText }));
             } catch (error) {
                 console.error('SERVER ERROR:', error.message);
-                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.statusCode = 500;
+                res.setHeader('Content-Type', 'application/json');
                 res.end(JSON.stringify({ error: error.message }));
             }
         });
     } else {
-        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.statusCode = 404;
+        res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify({ error: 'Route not found' }));
     }
 };

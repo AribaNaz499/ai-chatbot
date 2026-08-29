@@ -37,10 +37,18 @@ export default function App() {
   }, [messages, loading]);
 
   // File ko Base64 string mein convert karne ke liye helper function
+ // Updated Helper Function
   const fileToBase64 = (file) => {
     return new Promise((resolve, reject) => {
+      // Direct file target handle karne ke liye (agar input event pass ho gaya ho)
+      const actualFile = file?.target?.files?.[0] || file?.file || file;
+
+      if (!(actualFile instanceof Blob)) {
+        return reject(new TypeError("Selected object is not a valid File or Blob"));
+      }
+
       const reader = new FileReader();
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(actualFile);
       reader.onload = () => resolve(reader.result);
       reader.onerror = (error) => reject(error);
     });
@@ -102,16 +110,27 @@ export default function App() {
     }
 
     try {
-      // NOTE: Is URL ko apne actual deployed Vercel backend URL se replace karein
-      const response = await fetch('https://chatbot-backend-eight-omega.vercel.app/api/chat', {
+      // Dynamic URL: Local test ke liye localhost, varna Vercel URL
+      const API_URL = window.location.hostname === 'localhost'
+        ? 'http://localhost:5000/api/chat'
+        : 'https://chatbot-backend-eight-omega.vercel.app/api/chat';
+
+      const response = await fetch(API_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify({
           message: currentInput,
           history: messages.filter((m) => m.id !== 1),
           file: filePayload
         })
       });
+
+      if (!response.ok) {
+        throw new Error(`Server returned status: ${response.status}`);
+      }
 
       const data = await response.json();
 

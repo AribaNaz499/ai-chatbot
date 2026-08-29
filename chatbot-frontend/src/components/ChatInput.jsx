@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
-import { X , SendHorizontal} from 'lucide-react';
+import { X, SendHorizontal } from 'lucide-react';
+
 export default function ChatInput({
   input,
   setInput,
@@ -13,17 +14,15 @@ export default function ChatInput({
     const file = e.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64Data = reader.result.split(',')[1];
+    // Raw File object send karein (App.jsx isko convert kar lega)
+    setSelectedFile(file);
+  };
 
-      setSelectedFile({
-        name: file.name,
-        mimeType: file.type,
-        base64: base64Data
-      });
-    };
-    reader.readAsDataURL(file);
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''; // Input clear karein
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -39,7 +38,7 @@ export default function ChatInput({
         <div className="mb-2 flex items-center gap-2 bg-[#1e2330] text-emerald-400 text-xs px-3 py-1.5 rounded-lg border border-emerald-500/30 w-fit">
           <span>📎 {selectedFile.name}</span>
           <button
-            onClick={() => setSelectedFile(null)}
+            onClick={handleRemoveFile}
             className="text-gray-400 hover:text-red-400 p-0.5 rounded-full hover:bg-red-500/10 transition ml-1 shrink-0"
             type="button"
             title="Remove file"
