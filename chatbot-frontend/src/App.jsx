@@ -113,7 +113,7 @@ export default function App() {
       // Dynamic URL: Local test ke liye localhost, varna Vercel URL
       const API_URL = window.location.hostname === 'localhost'
         ? 'http://localhost:5000/api/chat'
-        : 'https://chatbot-backend-eight-omega.vercel.app/api/chat';
+        : 'https://chatbot-backend-black-mu.vercel.app/api/chat';
 
       const response = await fetch(API_URL, {
         method: 'POST',
