@@ -7,14 +7,28 @@ dotenv.config();
 const PORT = process.env.PORT || 5000;
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+// Allowed Origins for CORS
+const ALLOWED_ORIGINS = [
+    'http://localhost:5173',
+    'http://localhost:5000',
+    'https://chatbot-frontend-eight-flame.vercel.app'
+];
+
 const handler = async (req, res) => {
-    // 1. Set Global CORS Headers
+    const origin = req.headers.origin;
+
+    // Dynamic Origin Check (Security Fix for Credentials + CORS)
+    if (ALLOWED_ORIGINS.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+    } else {
+        res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    }
+
     res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS, PATCH, DELETE, POST, PUT');
     res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization');
 
-    // 2. Handle Preflight (OPTIONS) Request
+    // Preflight Request Fast Exit
     if (req.method === 'OPTIONS') {
         res.statusCode = 200;
         res.end();
@@ -50,6 +64,7 @@ const handler = async (req, res) => {
                     return;
                 }
 
+                // Updated Gemini Model Name
                 const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
                 const formattedHistory = (history || []).map((msg) => ({
